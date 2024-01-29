@@ -1,0 +1,67 @@
+ 
+ 
+ .input {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+ #inputtext {
+    width: 300px;
+}
+
+#spinner {
+    height: 100px;
+    width: 100px;
+}
+
+
+#spinnercontainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.grid-item{
+  
+  padding: 10px;
+  text-align: left;
+
+}
+
+.card-text {
+  font-family: 'San Francisco', sans-serif;
+}
+
+.badge-pill-container{
+  display:flex;
+  align-items: center;
+}
+
+
+.card-input {
+  background-color: rgba(255, 255, 255, 0.8); 
+  border: 1px solid rgba(0, 0, 0, 0.1); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+  max-width: 300px;
+}
+
+.space-between-paragraph-chart {
+  margin-bottom: 60px; 
+}
+
+
+
+
+
+
