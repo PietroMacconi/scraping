@@ -1,0 +1,497 @@
+{% extends "index.html" %}
+
+
+
+{% block body %}
+
+
+
+<div class="chart-container container-fluid mt-3 ">
+    <div class="row">
+        <div class="col-md-12 col-lg-4 grid-item">
+            <div class="card h-100">
+                <div class="card-body" id="mediaSentimentChart">
+                    <h5 class="card-title">Mean sentiment value</h5>
+                    <p class="card-text"> 
+                        The sentiment is represented on a scale from 0 to 2, 
+                        corresponding to the negative pole and the positive pole, respectively.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 col-lg-4 grid-item">
+            <div class="card h-100">
+                <div class="card-body  ">
+                    <h5 class="card-title">Predominant emotion</h5>
+                    <p class="card-text">  The most frequently encountered type of emotion
+                         in the analysis of comments is: </p>
+                    <div class="badge-pill-container d-flex justify-content-center ">
+                    <span class="badge-pill mt-2" id="emotionBadge">
+                        {{ predominant_emotion }}
+                    </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 col-lg-4 grid-item">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <h5 class="card-title">Random comment</h5>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary btn-sm bi bi-arrow-clockwise" id="loadRandomCommentBtn"></button>
+                        </div>
+                    </div>
+                    <p class="card-text mt-2" id="randomCommentText">Click the button to view a random comment.</p>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-1 d-flex align-items-stretch ">
+        <div class="col-md-12 col-lg-6 grid-item">
+            <div class="card h-100 ">
+                <div class="card-body" id="bar-chart">
+                    <h3>Emotion Chart</h3>
+                    <p class="card-text"> The chart provides a quick overview of the emotional tones expressed,
+                         helping to identify prevalent sentiments within the analyzed dataset.</p>
+                    <div id="emotionChart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 col-lg-6 grid-item" id="sentiments-chart">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title">Sentiment Chart</h3>
+                    <p class="card-text">The chart offers a concise visual summary of the overall sentiment distribution within the dataset..</p>
+                    <div id="sentimentRadialChart"></div>
+                </div>
+            </div>
+        </div>
+       </div>
+
+       <div class="row mt-1 d-flex align-items-stretch">
+        <div class="col-md-12 col-lg-6 grid-item">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3>Emotion Radar Chart</h3>
+                    <p class="card-text space-between-paragraph-chart ">Symmetry in this chart is evident when the distribution of emotions is well-balanced across the axes,
+                         suggesting a uniform occurrence of different emotions in the analyzed comments.</p>
+                    <div  id="emotionRadarChart"></div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="col-md-12 col-lg-6 grid-item">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3>Donut Chart</h3>
+                    <p class="card-text">This chart represents the distribution of
+                         sentiments and displays the percentage of negative, neutral,
+                          and positive sentiments, offering a comprehensive view of the 
+                          sentiment distribution in the analyzed comments.</p>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div id="sentimentDonutChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+
+
+
+<script>
+   
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Recupero dati 
+        var emotionsData = JSON.parse('{{ emotions|tojson|safe }}');
+        var sentimentData = JSON.parse('{{ sentiment | tojson | safe }}');
+        var sentimentMeanData = JSON.parse('{{ media_sentiment | tojson | safe }}');
+        
+
+        
+        // Mappa i valori del sentiment 
+        var sentimentLabels = {
+            0: 'Negative',
+            1: 'Neutral',
+            2: 'Positive'
+        };
+
+        
+        
+        //Donut chart
+        if (sentimentData.length > 0) {
+            // Contare le occorrenze 
+            var sentimentCount = {
+                'Negative': 0,
+                'Neutral': 0,
+                'Positive': 0
+            };
+
+            sentimentData.forEach(function (sentiment) {
+                sentimentCount[sentimentLabels[sentiment]]++;
+            });
+
+            // Percentuali
+            var totalComments = sentimentData.length;
+            var negativePercentage = (sentimentCount['Negative'] / totalComments) * 100;
+            var neutralPercentage = (sentimentCount['Neutral'] / totalComments) * 100;
+            var positivePercentage = (sentimentCount['Positive'] / totalComments) * 100;
+
+            // Preparazione dati per il grafico 
+            var sentimentDonutData = {
+                series: [negativePercentage, neutralPercentage, positivePercentage],
+                labels: ['Negative', 'Neutral', 'Positive']
+            };
+
+            // Creazione del donut chart
+            var sentimentDonutChart = new ApexCharts(document.querySelector('#sentimentDonutChart'), {
+                series: sentimentDonutData.series,
+                chart: {
+                    type: 'donut',
+                    width: 500
+                },
+                labels: sentimentDonutData.labels,
+                plotOptions: {
+                    pie: {
+                        startAngle: 0,
+                        endAngle: 360,
+                        offsetY: 0,
+                        donut: {
+                            size: '75%',
+                        },
+                    },
+                },
+                legend:{
+                    position: 'top',
+                    offsetX: 30, 
+                },
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            width: 200
+                        }
+                        
+                    }
+                }]
+            });
+
+            sentimentDonutChart.render();
+        } else {
+            
+            var noSentimentDataMessage = document.createElement('p');
+            noSentimentDataMessage.innerText = 'No sentiments data available for donut chart.';
+            document.querySelector('#sentimentDonutChart').appendChild(noSentimentDataMessage);
+        }
+
+
+
+        // Radar Chart
+        if (emotionsData.length > 0) {
+            // Conta le occorrenze
+            var emotionCount = {};
+            emotionsData.forEach(function (emotion) {
+                emotionCount[emotion] = (emotionCount[emotion] || 0) + 1;
+            });
+
+            // Preparazione dati per il grafico 
+            var radarChartData = {
+                series: [{
+                    name: 'Emotion Occurrences',
+                    data: Object.values(emotionCount),
+                }],
+                chart: {
+                    height: 350,
+                    type: 'radar',
+                },
+                
+                xaxis: {
+                    categories: Object.keys(emotionCount),
+                },
+                plotOptions: {
+                    radar: {
+                        size: 140,
+                        polygons: {
+                            strokeColor: '#e9e9e9',
+                            fill: {
+                                colors: ['#f8f8f8', '#fff']
+                            }
+                        }
+                    }
+                },
+                fill: {
+                    opacity: 0.2,
+                    colors: ['#1ab7ea', '#0084ff', '#39539E', '#0077B5', '#FF4500', '#FF1493']
+                },
+                markers: {
+                    size: 1,
+                    
+                }
+                
+            };
+
+            // Creazione del grafico
+            var radarChart = new ApexCharts(document.querySelector('#emotionRadarChart'), radarChartData);
+            radarChart.render();
+        } else {
+           
+            var noEmotionsDataMessage = document.createElement('p');
+            noEmotionsDataMessage.innerText = 'No emotions data available for radar chart.';
+            document.querySelector('#emotionRadarChart').appendChild(noEmotionsDataMessage);
+        }
+
+        
+
+
+// Barra orizzontale (media) 
+if (!isNaN(sentimentMeanData)) {
+    // Arrotonda il valore a due cifre decimali
+    var roundedSentimentMean = sentimentMeanData.toFixed(2);
+
+    // Calcola il valore percentuale per la barra di progresso
+    var progressBarValue = Math.round((roundedSentimentMean / 2) * 100);
+
+    var color = calculateColor(sentimentMeanData);
+
+    // Crea la barra di progresso 
+    var progressBar = document.createElement('div');
+    progressBar.className = 'progress';
+    progressBar.innerHTML =
+        '<div class="progress-bar" role="progressbar" style="width: ' + progressBarValue + '%; background: ' + color + '" aria-valuenow="' + roundedSentimentMean + '" aria-valuemin="0" aria-valuemax="2">' +
+        roundedSentimentMean +
+        '</div>';
+
+    
+    document.querySelector('#mediaSentimentChart').appendChild(progressBar);
+} else {
+    
+    var noMediaSentimentDataMessage = document.createElement('p');
+    noMediaSentimentDataMessage.innerText = 'No media sentiment data available.';
+    document.querySelector('#mediaSentimentChart').appendChild(noMediaSentimentDataMessage);
+}
+
+
+
+
+// Calcolare il colore della barra
+function calculateColor(value) {
+    var color;
+
+    if (value >= 0.0 && value <= 0.50) {
+       
+        color = 'red';
+    } else if (value > 0.51 && value <= 1.00) {
+        
+        color = 'orange';
+    } else if (value > 1.01 && value <= 1.5) {
+        
+        color = 'limegreen';
+    } else if (value > 1.51 && value <= 2.0) {
+        
+        color = 'green';
+    }
+
+    return color;
+}
+
+// Cambiare il colore della chip
+function changeChipColor(emotion) {
+            var chip = document.querySelector('#emotionBadge');
+
+           
+            // Assegna una classe 
+            switch (emotion) {
+                case 'joy':
+                    chip.classList.add('badge-success');
+                    break;
+                case 'surprise':
+                    chip.classList.add('badge-info');
+                    break;
+                case 'anger':
+                    chip.classList.add('badge-danger');
+                    break;
+                case 'love':
+                    chip.classList.add('badge-light');
+                    break;
+                case 'sadness':
+                    chip.classList.add('badge-warning');
+                    break;
+                case 'fear':
+                    chip.classList.add('badge-primary');
+                    break;
+                
+                default:
+                    chip.classList.add('badge-dark'); 
+                    break;
+            }
+        }
+
+        // Predominant_emotion
+        var predominantEmotion = "{{ predominant_emotion }}"; 
+        changeChipColor(predominantEmotion);
+
+    
+
+
+        
+
+
+        
+
+        // Bar Chart
+        if (emotionsData.length > 0) {
+            // Preparare i dati
+            var chartData = Object.entries(emotionsData.reduce(function (acc, emotion) {
+                acc[emotion] = (acc[emotion] || 0) + 1;
+                return acc;
+            }, {})).map(function ([emotion, count]) {
+                return { emotion: emotion, count: count };
+            });
+
+            // Creazione del Bar chart 
+            var options = {
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                },
+                
+                series: [{
+                    name: 'Emotions',
+                    data: chartData.map(function (item) {
+                        return item.count;
+                        
+                    }),
+                }],
+                xaxis: {
+                    categories: chartData.map(function (item) {
+                        return item.emotion;
+                    }),
+                },
+                
+                
+                
+            };
+
+            var chart = new ApexCharts(document.querySelector('#emotionChart'), options);
+            chart.render();
+        } else {
+            var noDataMessage = document.createElement('p');
+            noDataMessage.innerText = 'No emotions data available.';
+            document.querySelector('#emotionChart').appendChild(noDataMessage);
+        }
+   
+
+
+
+        
+
+        // Radial Bar Chart 
+        if (sentimentData.length > 0) {
+        
+            var sentimentChartData = Object.entries(sentimentData.reduce(function (acc, sentiment) {
+                acc[sentiment] = (acc[sentiment] || 0) + 1;
+                return acc;
+            }, {})).map(function ([sentiment, count]) {
+                return { sentiment: sentimentLabels[sentiment], count: count };
+            });
+
+            // Creazione Radial bar chart 
+            var sentimentOptions = {
+                chart: {
+                    type: 'radialBar',
+                    height: 385,
+                },
+                plotOptions: {
+                    radialBar: {
+                        
+                        offsetY: 0,
+                        startAngle: 0,
+                        endAngle: 270,
+                        hollow: {
+                            margin: 5,
+                            size: '30%',
+                            background: 'transparent',
+                            image: undefined,
+                        },
+                        dataLabels: {
+                            name: {
+                                show: false,
+                            },
+                            value: {
+                                show: false,
+                            }
+                        }
+                    }
+                },
+                colors: ['#1ab7ea', '#0084ff', '#39539E', '#0077B5'],
+                series: sentimentChartData.map(function (item) {
+                    return item.count;
+                }),
+                labels: sentimentChartData.map(function (item) {
+                    return item.sentiment;
+                }),
+                legend: {
+                    show: true,
+                    floating: true,
+                    fontSize: '15px',
+                    position: 'left',
+                    offsetX: 100,
+                    offsetY: 15,
+                    labels: {
+                        useSeriesColors: true,
+                    },
+                    markers: {
+                        size: 0
+                    },
+                    formatter: function (seriesName, opts) {
+                        return seriesName + ":  " + opts.w.globals.series[opts.seriesIndex];
+                    },
+                    itemMargin: {
+                        vertical: 3
+                    }
+                },
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        legend: {
+                            show: false
+                        }
+                    }
+                }]
+            };
+
+            var sentimentChart = new ApexCharts(document.querySelector('#sentimentRadialChart'), sentimentOptions);
+            sentimentChart.render();
+        } else {
+           
+            var noSentimentsDataMessage = document.createElement('p');
+            noSentimentsDataMessage.innerText = 'No sentiments data available.';
+            document.querySelector('#sentimentRadialChart').appendChild(noSentimentsDataMessage);
+        }
+
+         // Carica Nuovo Commento
+         document.getElementById('loadRandomCommentBtn').addEventListener('click', function () {
+           
+            fetch('/random_comment')
+                .then(response => response.json())
+                .then(data => {
+                    // Aggiorna dinamicamente 
+                    document.getElementById('randomCommentText').innerText = '"' + data.random_comment + '"';
+                })
+                .catch(error => console.error('Errore durante la richiesta AJAX:', error));
+        });
+    });
+</script>
+
+
+
+
+{% endblock %}
