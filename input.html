@@ -1,0 +1,36 @@
+{% extends "index.html" %}
+
+{% block body %}
+<body>
+<div class="card mx-auto mt-5 card-input " style="max-width: 400px;">
+    <div class="card-body">
+        <h4 class="card-title card-title">Emotion & Sentiment analysis</h4>
+        <form class="inputcontainer " action='/input' method='post'>
+            <label >Copy the YouTube link from your browser's address bar,
+               and then proceed to paste it in the space provided below.</label>
+            <div class="row justify-content-center mt-3">
+                <input name="text" type="text" class="form-control mt-3  " id="inputtext" placeholder="Insert the YouTube link here" oninput="checkInput()">
+            </div>
+            <div class="row mt-2 text-center">
+              <div class="col">
+                  <button type="submit" class="btn btn-primary" id="inputbutton" disabled>Submit</button>
+              </div>
+          </div>
+        </form>
+    </div>
+</div>
+</body>
+
+<script>
+    // Controllo input
+    function checkInput() {
+        var inputText = document.getElementById('inputtext').value;
+        var submitButton = document.getElementById('inputbutton');
+        
+        // Attiva o Disattiva
+        submitButton.disabled = inputText.trim() === '';
+    }
+</script>
+
+{% endblock %}
+
