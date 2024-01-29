@@ -1,0 +1,43 @@
+{% extends "index.html" %}
+
+{% block body %}
+
+<div id="spinnercontainer">
+    <div class="spinner-border spinner-border-lg mb-5" id="spinner" role="status">
+        <span class="sr-only"></span>
+    </div>
+</div>
+
+
+<script>
+    
+    let redirectionOccurred = false;
+
+    // Controllo /processing
+    function checkStatus() {
+        
+ 
+            fetch('/processing')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                       
+                        redirectionOccurred = true;
+                        window.location.href = '/graph';
+                    } else {
+                       
+                        setTimeout(checkStatus, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('An error occurred during the /processing call:', error);
+                    setTimeout(checkStatus, 2000);
+                });
+
+    }
+
+    
+    checkStatus();
+</script>
+
+{% endblock %}
